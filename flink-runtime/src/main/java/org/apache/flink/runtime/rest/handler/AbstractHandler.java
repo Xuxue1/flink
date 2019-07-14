@@ -51,6 +51,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -122,7 +123,7 @@ public abstract class AbstractHandler<T extends RestfulGateway, R extends Reques
 				}
 			} else {
 				try {
-					ByteBufInputStream in = new ByteBufInputStream(msgContent);
+					InputStream in = new ByteBufInputStream(msgContent);
 					request = MAPPER.readValue(in, untypedResponseMessageHeaders.getRequestClass());
 				} catch (JsonParseException | JsonMappingException je) {
 					throw new RestHandlerException(
@@ -193,7 +194,7 @@ public abstract class AbstractHandler<T extends RestfulGateway, R extends Reques
 				rhe.getHttpResponseStatus(),
 				responseHeaders);
 		} else {
-			log.error("Implementation error: Unhandled exception.", throwable);
+			log.error("Unhandled exception.", throwable);
 			String stackTrace = String.format("<Exception on server side:%n%s%nEnd of exception on server side>",
 				ExceptionUtils.stringifyException(throwable));
 			return HandlerUtils.sendErrorResponse(

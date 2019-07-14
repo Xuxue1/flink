@@ -42,7 +42,7 @@ The following examples show how to specify a SQL queries on registered and inlin
 <div data-lang="java" markdown="1">
 {% highlight java %}
 StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-StreamTableEnvironment tableEnv = TableEnvironment.getTableEnvironment(env);
+StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env);
 
 // ingest a DataStream from an external source
 DataStream<Tuple3<Long, String, Integer>> ds = env.addSource(...);
@@ -74,7 +74,7 @@ tableEnv.sqlUpdate(
 <div data-lang="scala" markdown="1">
 {% highlight scala %}
 val env = StreamExecutionEnvironment.getExecutionEnvironment
-val tableEnv = TableEnvironment.getTableEnvironment(env)
+val tableEnv = StreamTableEnvironment.create(env)
 
 // read a DataStream from an external source
 val ds: DataStream[(Long, String, Integer)] = env.addSource(...)
@@ -100,6 +100,30 @@ tableEnv.registerTableSink("RubberOrders", fieldNames, fieldTypes, csvSink)
 // run a SQL update query on the Table and emit the result to the TableSink
 tableEnv.sqlUpdate(
   "INSERT INTO RubberOrders SELECT product, amount FROM Orders WHERE product LIKE '%Rubber%'")
+{% endhighlight %}
+</div>
+
+<div data-lang="python" markdown="1">
+{% highlight python %}
+env = StreamExecutionEnvironment.get_execution_environment()
+table_env = StreamTableEnvironment.create(env)
+
+# SQL query with an inlined (unregistered) table
+# elements data type: BIGINT, STRING, BIGINT
+table = table_env.from_elements(..., ['user', 'product', 'amount'])
+result = table_env \
+    .sql_query("SELECT SUM(amount) FROM %s WHERE product LIKE '%%Rubber%%'" % table)
+
+# SQL update with a registered table
+# create and register a TableSink
+table_env.register_table("Orders", table)
+field_names = ["product", "amount"]
+field_types = [DataTypes.STRING(), DataTypes.BIGINT()]
+csv_sink = CsvTableSink(field_names, field_types, "/path/to/file", ...)
+table_env.register_table_sink("RubberOrders", csv_sink)
+# run a SQL update query on the Table and emit the result to the TableSink
+table_env \
+    .sql_update("INSERT INTO RubberOrders SELECT product, amount FROM Orders WHERE product LIKE '%Rubber%'")
 {% endhighlight %}
 </div>
 </div>
@@ -722,9 +746,11 @@ ORDER BY orderTime
         <span class="label label-primary">Batch</span>
       </td>
       <td>
+<b>Note:</b> The LIMIT clause requires an ORDER BY clause. 
 {% highlight sql %}
 SELECT *
 FROM Orders
+ORDER BY orderTime
 LIMIT 3
 {% endhighlight %}
       </td>
@@ -861,7 +887,7 @@ The following examples show how to specify SQL queries with group windows on str
 <div data-lang="java" markdown="1">
 {% highlight java %}
 StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-StreamTableEnvironment tableEnv = TableEnvironment.getTableEnvironment(env);
+StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env);
 
 // ingest a DataStream from an external source
 DataStream<Tuple3<Long, String, Integer>> ds = env.addSource(...);
@@ -898,7 +924,7 @@ Table result4 = tableEnv.sqlQuery(
 <div data-lang="scala" markdown="1">
 {% highlight scala %}
 val env = StreamExecutionEnvironment.getExecutionEnvironment
-val tableEnv = TableEnvironment.getTableEnvironment(env)
+val tableEnv = StreamTableEnvironment.create(env)
 
 // read a DataStream from an external source
 val ds: DataStream[(Long, String, Int)] = env.addSource(...)
